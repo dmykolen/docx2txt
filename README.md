@@ -1,32 +1,10 @@
 # docx2md
 
-Convert Microsoft Word Document to Markdown
+Convert Microsoft Word Document to pretty formated txt.
 
-![docx2md](https://raw.githubusercontent.com/mattn/docx2md/master/screenshot.png)
+Fork of ![docx2md](https://github.com/mattn/docx2md)
 
-## Usage
 
-```
-$ docx2md NewDocument.docx
-```
-
-## Installation
-
-```
-$ go get github.com/mattn/docx2md
-```
-
-## Supported Styles
-
-* Header
-* HyperLink
-* Indent
-* Table
-* List
-* Bold
-* Italic
-* Strike
-* Embeded Image
 
 ## License
 
