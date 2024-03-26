@@ -368,10 +368,7 @@ func findFile(files []*zip.File, target string) *zip.File {
 }
 
 func Docx2txt(arg string, embed bool, options ...OptionsFunc) (*bytes.Buffer, error) {
-	opts := &Options{StyleTbls: "pretty"}
-	for _, o := range options {
-		o(opts)
-	}
+	opts := NewOptions(options...)
 	r, err := zip.OpenReader(arg)
 	if err != nil {
 		return nil, err
@@ -431,7 +428,8 @@ func Docx2txt(arg string, embed bool, options ...OptionsFunc) (*bytes.Buffer, er
 		opts:  opts,
 	}
 
-	w := io.MultiWriter(&buf, os.Stdout)
+	// w := io.MultiWriter(&buf, ifTernary(opts.IsDebug, os.Stdout, nil))
+	w := ifTernary(opts.IsDebug, io.MultiWriter(&buf, os.Stdout), io.MultiWriter(&buf))
 	err = zf.walk(node, w)
 	// err = zf.walk(node, &buf)
 	if err != nil {
@@ -449,6 +447,7 @@ func Docx2txt(arg string, embed bool, options ...OptionsFunc) (*bytes.Buffer, er
 var reSpace = regexp.MustCompile(`>\s+<`)
 
 func (zf *file) walk(node *Node, w io.Writer) error {
+	ff := zf.opts.Logger.Debugf
 	switch node.XMLName.Local {
 	case "hyperlink":
 		fmt.Fprint(w, "[")
@@ -541,7 +540,7 @@ func (zf *file) walk(node *Node, w io.Writer) error {
 				fmt.Fprint(w, strings.Repeat("  ", ind))
 				switch numFmt {
 				case "decimal", "aiueoFullWidth":
-					fp("\n>>>>>>>>>>>>  NUMFMT !!!!!!!!!\n")
+					ff(">>>>>>>>>>>>  NUMFMT !!!!!!!!!")
 					key := fmt.Sprintf("%s:%d", numID, ind)
 					cur, ok := zf.list[key]
 					if !ok {
@@ -583,7 +582,8 @@ func (zf *file) walk(node *Node, w io.Writer) error {
 				if err := zf.walk(&tc, &cbuf); err != nil {
 					return err
 				}
-				ff("\n\n >>>>>>>>>>>>  CBUF:[%s]\n", unescapeHTMLEntities(cbuf.String()))
+				ff(">>>>>>>>>>>>  CBUF:[%s]", unescapeHTMLEntities(cbuf.String()))
+				// zf.opts.Logger.Debugf("\n\n >>>>>>>>>>>>  CBUF:[%s]\n", unescapeHTMLEntities(cbuf.String()))
 				// cols = append(cols, cbuf.String())
 				bufStr := unescapeHTMLEntities(cbuf.String())
 				bufStr = strings.Replace(bufStr, "\n", "", -1)
@@ -613,8 +613,8 @@ func (zf *file) walk(node *Node, w io.Writer) error {
 			}
 		}
 
-		ff("maxcol: %d; width: %v; len_rows=%d\n", maxcol, widths, len(rows))
-		ff("rows: %v\n", rows)
+		ff("maxcol: %d; width: %v; len_rows=%d", maxcol, widths, len(rows))
+		ff("rows: %v", rows)
 
 		for i, row := range rows {
 
@@ -664,7 +664,7 @@ func (zf *file) walk(node *Node, w io.Writer) error {
 					fmt.Fprint(w, strings.Repeat("-", widths[j]))
 				}
 				fmt.Fprint(w, "|\n")
-				ff("\nFIRST LINE PASS: len=%d; row: %v\n", len(row), row)
+				ff("FIRST LINE PASS: len=%d; row: %v", len(row), row)
 			}
 		}
 		fmt.Fprint(w, "\n")

@@ -5,6 +5,16 @@ import (
 	"encoding/xml"
 )
 
+type Logger interface {
+	Debugf(string, ...any)
+	Infof(string, ...any)
+	Errorf(string, ...any)
+
+	// Debug(...any)
+	// Info(...any)
+	// Error(...any)
+}
+
 // Relationship
 type Relationship struct {
 	Text       string `xml:",chardata"`
@@ -122,23 +132,4 @@ func (n *Node) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	type node Node
 
 	return d.DecodeElement((*node)(n), &start)
-}
-
-type Options struct {
-	StyleTbls string // "csv" or "pretty" or "md"
-}
-
-func (o *Options) isCSV() bool {
-	return o.StyleTbls == "csv"
-}
-func (o *Options) isPrettyOrMD() bool {
-	return o.StyleTbls == "pretty" || o.StyleTbls == "md"
-}
-
-type OptionsFunc func(*Options)
-
-func StyleTbls(style string) OptionsFunc {
-	return func(o *Options) {
-		o.StyleTbls = style
-	}
 }
